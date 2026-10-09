@@ -2,6 +2,7 @@ package scooter;
 
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,21 +11,27 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CreateCourierTest {
 
     private final CourierClient courierClient = new CourierClient();
+    private Courier courierToDelete;
+
+    @AfterEach
+    void cleanUpTestData() {
+        if (courierToDelete != null) {
+            deleteCourier(courierToDelete);
+            courierToDelete = null;
+        }
+    }
 
     @Test
     void courierCanBeCreated() {
 
         Courier courier = TestData.generateCourier();
+        courierToDelete = courier;
 
-        try {
-            Response response = courierClient.createCourier(courier);
+        Response response = courierClient.createCourier(courier);
 
-            checkStatusCode(response, 201);
-            checkOk(response);
+        checkStatusCode(response, 201);
+        checkOk(response);
 
-        } finally {
-            deleteCourier(courier);
-        }
     }
 
     @Test
@@ -75,33 +82,26 @@ public class CreateCourierTest {
     void cannotCreateTwoIdenticalCouriers() {
 
         Courier courier = TestData.generateCourier();
+        courierToDelete = courier;
 
-        try {
-            Response firstResponse =
-                    courierClient.createCourier(courier);
+        Response firstResponse = courierClient.createCourier(courier);
 
-            checkStatusCode(firstResponse, 201);
+        checkStatusCode(firstResponse, 201);
 
-            Response secondResponse =
-                    courierClient.createCourier(courier);
+        Response secondResponse = courierClient.createCourier(courier);
 
-            checkStatusCode(secondResponse, 409);
-
-        } finally {
-            deleteCourier(courier);
-        }
+        checkStatusCode(secondResponse, 409);
     }
 
     @Test
     void cannotCreateCourierWithExistingLogin() {
 
         Courier firstCourier = TestData.generateCourier();
+        courierToDelete = firstCourier;
 
-        try {
-            Response firstResponse =
-                    courierClient.createCourier(firstCourier);
+        Response firstResponse = courierClient.createCourier(firstCourier);
 
-            checkStatusCode(firstResponse, 201);
+        checkStatusCode(firstResponse, 201);
 
             Courier secondCourier = new Courier(
                     firstCourier.getLogin(),
@@ -109,14 +109,10 @@ public class CreateCourierTest {
                     "Turbo"
             );
 
-            Response secondResponse =
-                    courierClient.createCourier(secondCourier);
+        Response secondResponse = courierClient.createCourier(secondCourier);
 
-            checkStatusCode(secondResponse, 409);
+        checkStatusCode(secondResponse, 409);
 
-        } finally {
-            deleteCourier(firstCourier);
-        }
     }
 
     @Step("Проверить статус ответа: {expectedStatus}")

@@ -2,6 +2,7 @@ package scooter;
 
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,75 +11,75 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class LoginCourierTest {
 
     private final CourierClient courierClient = new CourierClient();
+    private Courier courierToDelete;
+
+    @AfterEach
+    void cleanUpTestData() {
+        if (courierToDelete != null) {
+            deleteCourier(courierToDelete);
+            courierToDelete = null;
+        }
+    }
 
     @Test
     void courierCanLogin() {
 
         Courier courier = TestData.generateCourier();
+        courierToDelete = courier;
 
-        try {
-            createCourier(courier);
+        createCourier(courier);
 
-            Response response = courierClient.loginCourier(
+        Response response = courierClient.loginCourier(
                     courier.getLogin(),
                     courier.getPassword()
             );
 
-            checkStatusCode(response, 200);
-            checkId(response);
+        checkStatusCode(response, 200);
+        checkId(response);
 
-        } finally {
-            deleteCourier(courier);
-        }
     }
 
     @Test
     void cannotLoginWithIncorrectLogin() {
 
         Courier courier = TestData.generateCourier();
+        courierToDelete = courier;
 
-        try {
-            createCourier(courier);
+        createCourier(courier);
 
-            Response response = courierClient.loginCourier(
+        Response response = courierClient.loginCourier(
                     courier.getLogin() + "Wrong",
                     courier.getPassword()
             );
 
-            checkStatusCode(response, 404);
+        checkStatusCode(response, 404);
 
-        } finally {
-            deleteCourier(courier);
-        }
     }
 
     @Test
     void cannotLoginWithIncorrectPassword() {
 
         Courier courier = TestData.generateCourier();
+        courierToDelete = courier;
 
-        try {
-            createCourier(courier);
+        createCourier(courier);
 
-            Response response = courierClient.loginCourier(
+        Response response = courierClient.loginCourier(
                     courier.getLogin(),
                     "Qwerty12345"
             );
 
-            checkStatusCode(response, 404);
+        checkStatusCode(response, 404);
 
-        } finally {
-            deleteCourier(courier);
-        }
     }
 
     @Test
     void cannotLoginWithoutLogin() {
 
         Courier courier = TestData.generateCourier();
+        courierToDelete = courier;
 
-        try {
-            createCourier(courier);
+        createCourier(courier);
 
             String body = String.format(
                     "{\"password\":\"%s\"}",
@@ -95,18 +96,15 @@ public class LoginCourierTest {
 
             checkStatusCode(response, 400);
 
-        } finally {
-            deleteCourier(courier);
-        }
     }
 
     @Test
     void cannotLoginWithoutPassword() {
 
         Courier courier = TestData.generateCourier();
+        courierToDelete = courier;
 
-        try {
-            createCourier(courier);
+        createCourier(courier);
 
             String body = String.format(
                     "{\"login\":\"%s\"}",
@@ -123,9 +121,6 @@ public class LoginCourierTest {
 
             checkStatusCode(response, 504);
 
-        } finally {
-            deleteCourier(courier);
-        }
     }
 
     @Test
